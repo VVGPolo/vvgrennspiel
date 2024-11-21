@@ -16,10 +16,6 @@ scene.add(directionalLight);
 const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
 const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 
-// Startposition für Strecke und Rotation
-let currentRotation = 0;
-let lastSegment = null;
-
 // Funktion zum Hinzufügen eines Streckensegments
 function createTrackSegment(length, curveAngle = 0) {
   const trackWidth = 20; // Breite der Strecke
@@ -27,30 +23,23 @@ function createTrackSegment(length, curveAngle = 0) {
   const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
   segment.rotation.x = -Math.PI / 2; // Strecke flach legen
 
-  // Wenn es kein vorheriges Segment gibt, ist dies das erste Segment
+  // Falls es kein vorheriges Segment gibt, das erste Segment erstellen
   if (lastSegment === null) {
     segment.position.set(0, 0, -length / 2);
   } else {
-    // Berechnung der neuen Position relativ zum letzten Segment
-    segment.rotation.y = currentRotation;
-    const dx = Math.sin(currentRotation) * length;
-    const dz = Math.cos(currentRotation) * length;
+    // Segment an das vorherige anhängen
+    segment.position.set(0, 0, -length);
+    segment.rotation.y = curveAngle;
 
-    segment.position.set(
-      lastSegment.position.x + Math.sin(lastSegment.rotation.y) * length,
-      0,
-      lastSegment.position.z - Math.cos(lastSegment.rotation.y) * length
-    );
+    // Das aktuelle Segment relativ zum vorherigen verschieben
+    lastSegment.add(segment);
   }
 
   scene.add(segment);
-  lastSegment = segment; // Aktuelles Segment wird das letzte Segment
+  lastSegment = segment; // Aktuelles Segment wird zum letzten Segment
 
   // Debug-Markierung hinzufügen
   createDebugMarker(segment.position.x, segment.position.z, "yellow");
-
-  // Rotation für das nächste Segment aktualisieren
-  currentRotation += curveAngle;
 }
 
 // Debug-Markierungen hinzufügen
@@ -61,6 +50,9 @@ function createDebugMarker(x, z, color) {
   marker.position.set(x, 0.5, z);
   scene.add(marker);
 }
+
+// Startposition für die Strecke
+let lastSegment = null;
 
 // Strecke aufbauen
 createTrackSegment(50); // Gerade
