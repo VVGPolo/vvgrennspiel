@@ -76,4 +76,49 @@ function spawnObstacle() {
 
 // Auto bewegen
 function moveCar(event) {
-  if (!gameRunning) return; // Kei
+  if (!gameRunning) return; // Keine Bewegung bei "Game Over"
+  if (event.key === "ArrowLeft") car.x -= car.speed;
+  if (event.key === "ArrowRight") car.x += car.speed;
+  if (event.key === "ArrowUp") car.y -= car.speed;
+  if (event.key === "ArrowDown") car.y += car.speed;
+
+  // Begrenzung des Autos innerhalb der Rennstrecke
+  car.x = Math.max(track.x, Math.min(track.x + track.width - car.width, car.x));
+  car.y = Math.max(0, Math.min(canvas.height - car.height, car.y));
+}
+
+// Spiel beenden
+function endGame() {
+  gameRunning = false;
+  alert("Game Over!");
+  resetGame();
+}
+
+// Spiel zurücksetzen
+function resetGame() {
+  obstacles = [];
+  car.x = track.x + track.width / 2 - 25;
+  car.y = canvas.height - 120;
+  gameRunning = true;
+}
+
+// Spielschleife
+function gameLoop() {
+  if (!gameRunning) return; // Spiel pausieren, wenn es nicht läuft
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawTrack();
+  drawCar();
+  drawObstacles();
+  updateObstacles();
+
+  requestAnimationFrame(gameLoop);
+}
+
+// Hindernisse alle 2 Sekunden hinzufügen
+setInterval(spawnObstacle, obstacleSpawnInterval);
+
+// Event Listener und Start der Spielschleife
+window.addEventListener("keydown", moveCar);
+gameLoop();
