@@ -15,8 +15,8 @@ const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
 const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
 
 // Strecke bauen
-let lastPosition = { x: 0, z: 0 }; // Startposition
-let lastRotation = 0; // Startrotation
+let currentPosition = { x: 0, z: 0 }; // Startposition
+let currentRotation = 0; // Startrotation
 
 // Funktion zum Hinzufügen von Segmenten
 function createTrackSegment(length, curveAngle = 0) {
@@ -24,27 +24,28 @@ function createTrackSegment(length, curveAngle = 0) {
   const segmentGeometry = new THREE.PlaneGeometry(segmentWidth, length);
   const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
   segment.rotation.x = -Math.PI / 2; // Flach legen
-  segment.rotation.y = lastRotation; // Orientierung anpassen
+  segment.rotation.y = currentRotation; // Orientierung anpassen
 
   // Position basierend auf der vorherigen Position und Rotation berechnen
-  const dx = Math.sin(lastRotation) * length;
-  const dz = Math.cos(lastRotation) * length;
-  segment.position.set(lastPosition.x + dx / 2, 0, lastPosition.z - dz / 2);
+  const dx = Math.sin(currentRotation) * length;
+  const dz = Math.cos(currentRotation) * length;
+
+  currentPosition.x += dx;
+  currentPosition.z -= dz;
+
+  segment.position.set(currentPosition.x - dx / 2, 0, currentPosition.z + dz / 2);
+
+  scene.add(segment);
 
   // Begrenzungswände hinzufügen
   createWall(segmentWidth, length, segment, 5); // Rechte Wand
   createWall(segmentWidth, length, segment, -5); // Linke Wand
 
-  // Debug-Markierung (optional, hilft bei der Visualisierung)
-  createDebugMarker(segment.position.x, segment.position.z, "blue");
+  // Debug-Markierungen (optional)
+  createDebugMarker(currentPosition.x, currentPosition.z, "red");
 
-  // Rotation und Position für das nächste Segment aktualisieren
-  lastRotation += curveAngle;
-  lastPosition.x += dx;
-  lastPosition.z -= dz;
-
-  scene.add(segment);
-  return segment;
+  // Rotation für das nächste Segment aktualisieren
+  currentRotation += curveAngle;
 }
 
 // Begrenzungswände entlang der Strecke
@@ -61,12 +62,12 @@ function createWall(segmentWidth, segmentLength, segment, offsetX) {
   scene.add(wall);
 }
 
-// Debug-Markierungen hinzufügen (für die visuelle Überprüfung der Positionen)
+// Debug-Markierungen hinzufügen (zum Testen der Positionierung)
 function createDebugMarker(x, z, color) {
   const markerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
   const markerMaterial = new THREE.MeshBasicMaterial({ color });
   const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-  marker.position.set(x, 0.1, z);
+  marker.position.set(x, 0.5, z);
   scene.add(marker);
 }
 
