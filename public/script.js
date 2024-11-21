@@ -35,8 +35,8 @@ function createTrackSegment(length, curveAngle = 0) {
     segment.updateMatrix(); // Die Matrix des neuen Segments aktualisieren
 
     // Die Transformationen des letzten Segments anwenden
-    segment.applyMatrix4(lastSegment.matrix);
-    segment.rotation.y += curveAngle; // Die Kurve hinzufügen
+    segment.applyMatrix4(lastSegment.matrixWorld);
+    segment.rotateY(curveAngle); // Die Kurve hinzufügen
   }
 
   // Füge das Segment zur Szene hinzu und aktualisiere das letzte Segment
