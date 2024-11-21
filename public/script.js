@@ -8,9 +8,6 @@ document.body.appendChild(renderer.domElement);
 // Beleuchtung hinzufügen
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Umgebungslicht
 scene.add(ambientLight);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); // Direktionales Licht
-directionalLight.position.set(10, 20, 10);
-scene.add(directionalLight);
 
 // Materialien
 const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
@@ -29,12 +26,12 @@ function createTrackSegment(length, curveAngle = 0) {
   segment.rotation.y = currentRotation; // Orientierung setzen
 
   // Position basierend auf aktueller Rotation und Länge berechnen
-  const dx = Math.sin(currentRotation) * length / 2;
-  const dz = Math.cos(currentRotation) * length / 2;
+  const dx = Math.sin(currentRotation) * length;
+  const dz = Math.cos(currentRotation) * length;
   segment.position.set(
-    currentPosition.x + dx,
+    currentPosition.x + dx / 2,
     0,
-    currentPosition.z - dz
+    currentPosition.z - dz / 2
   );
 
   scene.add(segment);
@@ -43,8 +40,8 @@ function createTrackSegment(length, curveAngle = 0) {
   createDebugMarker(segment.position.x, segment.position.z, "yellow");
 
   // Aktualisiere die Position für das nächste Segment
-  currentPosition.x += Math.sin(currentRotation) * length;
-  currentPosition.z -= Math.cos(currentRotation) * length;
+  currentPosition.x += dx;
+  currentPosition.z -= dz;
   currentRotation += curveAngle;
 }
 
