@@ -27,18 +27,21 @@ function createTrackSegment(length, curveAngle = 0) {
   segment.rotation.y = lastRotation; // Orientierung anpassen
 
   // Position basierend auf der vorherigen Position und Rotation berechnen
-  const dx = Math.sin(lastRotation) * length / 2;
-  const dz = Math.cos(lastRotation) * length / 2;
-  segment.position.set(lastPosition.x + dx, 0, lastPosition.z - dz);
+  const dx = Math.sin(lastRotation) * length;
+  const dz = Math.cos(lastRotation) * length;
+  segment.position.set(lastPosition.x + dx / 2, 0, lastPosition.z - dz / 2);
 
   // Begrenzungswände hinzufügen
   createWall(segmentWidth, length, segment, 5); // Rechte Wand
   createWall(segmentWidth, length, segment, -5); // Linke Wand
 
+  // Debug-Markierung (optional, hilft bei der Visualisierung)
+  createDebugMarker(segment.position.x, segment.position.z, "blue");
+
   // Rotation und Position für das nächste Segment aktualisieren
   lastRotation += curveAngle;
-  lastPosition.x += Math.sin(lastRotation) * length / 2;
-  lastPosition.z -= Math.cos(lastRotation) * length / 2;
+  lastPosition.x += dx;
+  lastPosition.z -= dz;
 
   scene.add(segment);
   return segment;
@@ -58,12 +61,21 @@ function createWall(segmentWidth, segmentLength, segment, offsetX) {
   scene.add(wall);
 }
 
+// Debug-Markierungen hinzufügen (für die visuelle Überprüfung der Positionen)
+function createDebugMarker(x, z, color) {
+  const markerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+  const markerMaterial = new THREE.MeshBasicMaterial({ color });
+  const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+  marker.position.set(x, 0.1, z);
+  scene.add(marker);
+}
+
 // Strecke erstellen
 createTrackSegment(50); // Gerade
-createTrackSegment(20, Math.PI / 8); // Rechtskurve
-createTrackSegment(30); // Gerade
-createTrackSegment(20, -Math.PI / 8); // Linkskurve
-createTrackSegment(40); // Gerade
+createTrackSegment(30, Math.PI / 8); // Rechtskurve
+createTrackSegment(50); // Gerade
+createTrackSegment(30, -Math.PI / 8); // Linkskurve
+createTrackSegment(50); // Gerade
 createTrackSegment(30, Math.PI / 8); // Rechtskurve
 createTrackSegment(50); // Gerade
 
