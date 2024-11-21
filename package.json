@@ -1,0 +1,13 @@
+{
+  "name": "autorennspiel",
+  "version": "1.0.0",
+  "description": "Ein Multiplayer-Autorennspiel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.13.0"
+  }
+}
