@@ -9,26 +9,54 @@ document.body.appendChild(renderer.domElement);
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Helles Licht
 scene.add(ambientLight);
 
-// Test-Würfel hinzufügen
-const testCubeGeometry = new THREE.BoxGeometry(5, 5, 5);
-const testCubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const testCube = new THREE.Mesh(testCubeGeometry, testCubeMaterial);
-testCube.position.set(0, 2.5, 0); // In der Mitte der Szene platzieren
-scene.add(testCube);
+// Materialien
+const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
+const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+
+// Strecke erstellen
+function createTrack() {
+  const trackGeometry = new THREE.PlaneGeometry(50, 200); // Breite x Länge der Strecke
+  const track = new THREE.Mesh(trackGeometry, trackMaterial);
+  track.rotation.x = -Math.PI / 2; // Strecke flach legen
+  track.position.set(0, 0, -100); // Strecke vor der Kamera platzieren
+  scene.add(track);
+
+  // Debug-Markierungen auf der Strecke
+  createDebugMarker(0, -100, "yellow"); // Mitte der Strecke
+}
+createTrack();
+
+// Auto erstellen
+function createCar() {
+  const carGeometry = new THREE.BoxGeometry(5, 2, 10); // Breite x Höhe x Länge
+  const car = new THREE.Mesh(carGeometry, carMaterial);
+  car.position.set(0, 1, 0); // Auto leicht über der Strecke platzieren
+  scene.add(car);
+
+  // Debug-Markierung für das Auto
+  createDebugMarker(0, 0, "red"); // Position des Autos
+}
+createCar();
 
 // Debug-Markierungen hinzufügen
 function createDebugMarker(x, z, color) {
-  const markerGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+  const markerGeometry = new THREE.SphereGeometry(1, 16, 16);
   const markerMaterial = new THREE.MeshBasicMaterial({ color });
   const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-  marker.position.set(x, 0.5, z);
+  marker.position.set(x, 1, z);
   scene.add(marker);
 }
-createDebugMarker(0, 0, "red"); // Debug-Marker bei (0,0)
+
+// Test-Würfel (bleibt für Kontrolle)
+const testCubeGeometry = new THREE.BoxGeometry(5, 5, 5);
+const testCubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const testCube = new THREE.Mesh(testCubeGeometry, testCubeMaterial);
+testCube.position.set(20, 2.5, -50); // Außerhalb der Strecke platzieren
+scene.add(testCube);
 
 // Kamera positionieren
-camera.position.set(0, 10, 20); // Schräg über der Szene
-camera.lookAt(0, 0, 0); // Auf die Szene schauen
+camera.position.set(0, 50, 50); // Schräg über der Szene
+camera.lookAt(0, 0, -100); // Auf die Strecke schauen
 
 // Animationsschleife
 function animate() {
