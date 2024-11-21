@@ -15,8 +15,8 @@ const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
 const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
 
 // Strecke bauen
-let lastPosition = { x: 0, z: 0 };
-let lastRotation = 0;
+let lastPosition = { x: 0, z: 0 }; // Startposition
+let lastRotation = 0; // Startrotation
 
 // Funktion zum Hinzufügen von Segmenten
 function createTrackSegment(length, curveAngle = 0) {
@@ -26,32 +26,35 @@ function createTrackSegment(length, curveAngle = 0) {
   segment.rotation.x = -Math.PI / 2; // Flach legen
   segment.rotation.y = lastRotation; // Orientierung anpassen
 
-  // Position basierend auf der vorherigen
-  const dx = Math.sin(lastRotation) * length;
-  const dz = Math.cos(lastRotation) * length;
+  // Position basierend auf der vorherigen Position und Rotation berechnen
+  const dx = Math.sin(lastRotation) * length / 2;
+  const dz = Math.cos(lastRotation) * length / 2;
   lastPosition.x += dx;
   lastPosition.z -= dz;
+
   segment.position.set(lastPosition.x, 0, lastPosition.z);
 
-  scene.add(segment);
-
   // Begrenzungswände hinzufügen
-  createWall(segmentWidth, length, 5, segment);
-  createWall(segmentWidth, length, -5, segment);
+  createWall(segmentWidth, length, segment, 5); // Rechte Wand
+  createWall(segmentWidth, length, segment, -5); // Linke Wand
 
-  // Rotation aktualisieren (falls Kurve)
+  // Rotation und Position für das nächste Segment aktualisieren
   lastRotation += curveAngle;
+  lastPosition.x += Math.sin(lastRotation) * length / 2;
+  lastPosition.z -= Math.cos(lastRotation) * length / 2;
 
+  scene.add(segment);
   return segment;
 }
 
 // Begrenzungswände entlang der Strecke
-function createWall(width, length, offsetX, segment) {
-  const wallGeometry = new THREE.BoxGeometry(1, 2, length);
+function createWall(segmentWidth, segmentLength, segment, offsetX) {
+  const wallGeometry = new THREE.BoxGeometry(1, 2, segmentLength);
   const wall = new THREE.Mesh(wallGeometry, wallMaterial);
 
-  const dx = Math.sin(segment.rotation.y) * offsetX;
-  const dz = Math.cos(segment.rotation.y) * offsetX;
+  // Position basierend auf der Rotation und dem Offset berechnen
+  const dx = Math.cos(segment.rotation.y) * offsetX;
+  const dz = Math.sin(segment.rotation.y) * offsetX;
   wall.position.set(segment.position.x + dx, 1, segment.position.z - dz);
 
   wall.rotation.y = segment.rotation.y;
