@@ -8,14 +8,17 @@ document.body.appendChild(renderer.domElement);
 // Beleuchtung hinzufügen
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Umgebungslicht
 scene.add(ambientLight);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); // Direktionales Licht
+directionalLight.position.set(10, 20, 10);
+scene.add(directionalLight);
 
 // Materialien
 const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
 const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 
-// Globale Variablen für die Strecke
-let currentPosition = { x: 0, z: 0 }; // Startposition
-let currentRotation = 0; // Startrotation
+// Startposition für Strecke und Rotation
+let currentRotation = 0;
+let lastSegment = null;
 
 // Funktion zum Hinzufügen eines Streckensegments
 function createTrackSegment(length, curveAngle = 0) {
@@ -23,27 +26,30 @@ function createTrackSegment(length, curveAngle = 0) {
   const segmentGeometry = new THREE.PlaneGeometry(trackWidth, length);
   const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
   segment.rotation.x = -Math.PI / 2; // Strecke flach legen
-  segment.rotation.y = currentRotation; // Orientierung setzen
 
-  // Berechnung der neuen Position
-  const dx = Math.sin(currentRotation) * length;
-  const dz = Math.cos(currentRotation) * length;
+  // Wenn es kein vorheriges Segment gibt, ist dies das erste Segment
+  if (lastSegment === null) {
+    segment.position.set(0, 0, -length / 2);
+  } else {
+    // Berechnung der neuen Position relativ zum letzten Segment
+    segment.rotation.y = currentRotation;
+    const dx = Math.sin(currentRotation) * length;
+    const dz = Math.cos(currentRotation) * length;
 
-  // Segment in der Szene platzieren
-  segment.position.set(
-    currentPosition.x + dx / 2,
-    0,
-    currentPosition.z - dz / 2
-  );
+    segment.position.set(
+      lastSegment.position.x + Math.sin(lastSegment.rotation.y) * length,
+      0,
+      lastSegment.position.z - Math.cos(lastSegment.rotation.y) * length
+    );
+  }
 
   scene.add(segment);
+  lastSegment = segment; // Aktuelles Segment wird das letzte Segment
 
-  // Debug-Markierung
+  // Debug-Markierung hinzufügen
   createDebugMarker(segment.position.x, segment.position.z, "yellow");
 
-  // Position und Rotation für das nächste Segment aktualisieren
-  currentPosition.x += dx;
-  currentPosition.z -= dz;
+  // Rotation für das nächste Segment aktualisieren
   currentRotation += curveAngle;
 }
 
