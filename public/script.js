@@ -1,222 +1,58 @@
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+// Szene, Kamera und Renderer erstellen
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// Beleuchtung hinzufügen
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(10, 10, 10);
+scene.add(light);
 
-let track = {
-  width: canvas.width / 3,
-  x: canvas.width / 3,
-  color: "#666",
-};
+// Boden (Rennstrecke)
+const trackGeometry = new THREE.PlaneGeometry(10, 100);
+const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
+const track = new THREE.Mesh(trackGeometry, trackMaterial);
+track.rotation.x = -Math.PI / 2; // Flach legen
+scene.add(track);
 
-let car = {
-  x: track.x + track.width / 2 - 25,
-  y: canvas.height - 120,
-  width: 50,
-  height: 100,
-  color: "red",
-  speed: 5,
-};
+// Auto (eine Box)
+const carGeometry = new THREE.BoxGeometry(0.5, 0.5, 1);
+const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+const car = new THREE.Mesh(carGeometry, carMaterial);
+car.position.y = 0.25; // Etwas über dem Boden
+scene.add(car);
 
-let obstacles = [];
-let obstacleSpeed = 4;
-let obstacleSpawnInterval = 2000;
-let points = 0;
-let level = 1;
-let gameRunning = false; // Startet nur nach Klick auf "Start Race"
-let obstacleSpawner; // Referenz für das Hindernis-Interval
-let keys = {}; // Aktive Tasten speichern
+// Hindernis (eine Box)
+const obstacleGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0x0000ff });
+const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
+obstacle.position.set(0, 0.25, -10); // Vor dem Auto platzieren
+scene.add(obstacle);
 
-// Punktesystem zeichnen
-function drawPoints() {
-  ctx.fillStyle = "white";
-  ctx.font = "20px Arial";
-  ctx.textAlign = "left"; // Text links ausrichten
-  ctx.fillText(`Points: ${points}`, 20, 30); // Abstand zur linken Seite korrigiert
-  ctx.fillText(`Level: ${level}`, 20, 60); // Abstand zur linken Seite korrigiert
+// Kamera-Position
+camera.position.set(0, 5, 5);
+camera.lookAt(car.position);
+
+// Steuerung
+let keys = {};
+window.addEventListener("keydown", (event) => (keys[event.key] = true));
+window.addEventListener("keyup", (event) => (keys[event.key] = false));
+
+// Animationsschleife
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Bewegung des Autos
+  if (keys["ArrowLeft"]) car.position.x -= 0.1;
+  if (keys["ArrowRight"]) car.position.x += 0.1;
+  if (keys["ArrowUp"]) car.position.z -= 0.1;
+  if (keys["ArrowDown"]) car.position.z += 0.1;
+
+  // Kamera folgt dem Auto
+  camera.position.z = car.position.z + 5;
+
+  renderer.render(scene, camera);
 }
-
-// Auto zeichnen
-function drawCar() {
-  ctx.fillStyle = car.color;
-  ctx.fillRect(car.x, car.y, car.width, car.height);
-}
-
-// Rennstrecke zeichnen
-function drawTrack() {
-  ctx.fillStyle = track.color;
-  ctx.fillRect(track.x, 0, track.width, canvas.height);
-}
-
-// Hindernisse zeichnen
-function drawObstacles() {
-  obstacles.forEach((obstacle) => {
-    ctx.fillStyle = obstacle.color;
-    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-  });
-}
-
-// Hindernisse bewegen und prüfen
-function updateObstacles() {
-  obstacles.forEach((obstacle) => {
-    obstacle.y += obstacleSpeed;
-
-    // Horizontale Bewegung (nur für bewegliche Hindernisse)
-    if (obstacle.moving) {
-      obstacle.x += obstacle.direction;
-      // Begrenzung der Bewegung
-      if (
-        obstacle.x < track.x ||
-        obstacle.x + obstacle.width > track.x + track.width
-      ) {
-        obstacle.direction *= -1; // Richtung ändern
-      }
-    }
-  });
-
-  // Entferne Hindernisse, die aus dem Bildschirm sind
-  obstacles = obstacles.filter((obstacle) => obstacle.y < canvas.height);
-
-  // Kollisionsprüfung
-  obstacles.forEach((obstacle) => {
-    if (
-      car.x < obstacle.x + obstacle.width &&
-      car.x + car.width > obstacle.x &&
-      car.y < obstacle.y + obstacle.height &&
-      car.y + car.height > obstacle.y
-    ) {
-      endGame();
-    }
-  });
-}
-
-// Hindernisse zufällig erstellen
-function spawnObstacle() {
-  if (!gameRunning) return;
-
-  const obstacleWidth = Math.random() * 50 + 30; // Breite: 30-80
-  const obstacleHeight = Math.random() * 30 + 20; // Höhe: 20-50
-  const obstacleX = track.x + Math.random() * (track.width - obstacleWidth);
-
-  // Farben und Beweglichkeit definieren
-  const colors = [
-    { color: "blue", moving: false }, // Feste Hindernisse
-    { color: "green", moving: false }, // Feste Hindernisse
-    { color: "purple", moving: true }, // Bewegliche Hindernisse
-    { color: "red", moving: true }, // Bewegliche Hindernisse
-  ];
-  const chosen = colors[Math.floor(Math.random() * colors.length)];
-
-  // Bewegungsrichtung (nur für bewegliche Hindernisse)
-  const direction = chosen.moving ? (Math.random() < 0.5 ? -2 : 2) : 0;
-
-  obstacles.push({
-    x: obstacleX,
-    y: -50,
-    width: obstacleWidth,
-    height: obstacleHeight,
-    color: chosen.color,
-    moving: chosen.moving,
-    direction: direction,
-  });
-}
-
-// Bewegung basierend auf aktiven Tasten
-function moveCar() {
-  if (!gameRunning) return;
-
-  if (keys["ArrowLeft"]) car.x -= car.speed;
-  if (keys["ArrowRight"]) car.x += car.speed;
-  if (keys["ArrowUp"]) car.y -= car.speed;
-  if (keys["ArrowDown"]) car.y += car.speed;
-
-  // Begrenzung des Autos innerhalb der Rennstrecke
-  car.x = Math.max(track.x, Math.min(track.x + track.width - car.width, car.x));
-  car.y = Math.max(0, Math.min(canvas.height - car.height, car.y));
-}
-
-// Event Listener für Tasteneingaben
-window.addEventListener("keydown", (event) => {
-  keys[event.key] = true; // Taste gedrückt
-});
-
-window.addEventListener("keyup", (event) => {
-  keys[event.key] = false; // Taste losgelassen
-});
-
-// Spiel starten
-function startGame() {
-  points = 0;
-  level = 1;
-  obstacleSpeed = 4;
-  obstacles = [];
-  car.x = track.x + track.width / 2 - 25;
-  car.y = canvas.height - 120;
-  gameRunning = true;
-  obstacleSpawner = setInterval(spawnObstacle, obstacleSpawnInterval);
-  gameLoop();
-}
-
-// Spiel beenden
-function endGame() {
-  gameRunning = false;
-  clearInterval(obstacleSpawner); // Hindernis-Interval stoppen
-  alert(`Game Over! You scored ${points} points.`);
-  showStartScreen(); // Zurück zur Startseite
-}
-
-// Spielschleife
-function gameLoop() {
-  if (!gameRunning) return;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  drawTrack();
-  drawCar();
-  drawObstacles();
-  drawPoints();
-  updateObstacles();
-  moveCar(); // Auto bewegen
-
-  points++;
-  if (points % 500 === 0) {
-    level++;
-    obstacleSpeed += 1;
-  }
-
-  requestAnimationFrame(gameLoop);
-}
-
-// Startseite anzeigen
-function showStartScreen() {
-  gameRunning = false;
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvas leeren
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "white";
-  ctx.font = "30px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("Press 'Start Race' to Begin!", canvas.width / 2, canvas.height / 2);
-
-  // Vorherige Buttons entfernen
-  const existingButton = document.getElementById("startButton");
-  if (existingButton) existingButton.remove();
-
-  const startButton = document.createElement("button");
-  startButton.id = "startButton";
-  startButton.innerText = "Start Race";
-  startButton.style.position = "absolute";
-  startButton.style.top = `${canvas.height / 2 + 40}px`;
-  startButton.style.left = `${canvas.width / 2 - 50}px`;
-  document.body.appendChild(startButton);
-
-  startButton.addEventListener("click", () => {
-    startButton.remove();
-    startGame();
-  });
-}
-
-// Beim Laden der Seite die Startseite anzeigen
-showStartScreen();
+animate();
