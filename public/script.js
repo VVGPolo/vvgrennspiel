@@ -60,15 +60,15 @@ function createDebugMarker(x, z, color) {
   scene.add(marker);
 }
 
-// Strecke aufbauen (Rundkurs)
-createTrackSegment(50); // Gerade
-createTrackSegment(30, Math.PI / 8); // Rechtskurve
-createTrackSegment(50); // Gerade
-createTrackSegment(30, Math.PI / 8); // Rechtskurve
-createTrackSegment(50); // Gerade
-createTrackSegment(30, Math.PI / 8); // Rechtskurve
-createTrackSegment(50); // Gerade
-createTrackSegment(30, Math.PI / 8); // Rechtskurve
+// Strecke aufbauen (Rechteck-Rundkurs)
+createTrackSegment(100); // Gerade
+createTrackSegment(50, Math.PI / 2); // Rechtskurve (90 Grad)
+createTrackSegment(100); // Gerade
+createTrackSegment(50, Math.PI / 2); // Rechtskurve (90 Grad)
+createTrackSegment(100); // Gerade
+createTrackSegment(50, Math.PI / 2); // Rechtskurve (90 Grad)
+createTrackSegment(100); // Gerade
+createTrackSegment(50, Math.PI / 2); // Rechtskurve (90 Grad)
 
 // Auto erstellen
 const carGeometry = new THREE.BoxGeometry(5, 2, 10); // Breite x Höhe x Länge
@@ -85,7 +85,7 @@ window.addEventListener("keydown", (event) => (keys[event.key] = true));
 window.addEventListener("keyup", (event) => (keys[event.key] = false));
 
 // Kamera positionieren
-camera.position.set(0, 50, 100); // Schräg über der Szene
+camera.position.set(0, 150, 150); // Schräg über der Szene
 camera.lookAt(0, 0, -50); // Auf die Strecke schauen
 
 // Animationsschleife
