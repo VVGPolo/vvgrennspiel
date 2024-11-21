@@ -25,6 +25,7 @@ let obstacleSpawnInterval = 2000;
 let points = 0;
 let level = 1;
 let gameRunning = false; // Startet nur nach Klick auf "Start Race"
+let obstacleSpawner; // Referenz für das Hindernis-Interval
 
 // Punktesystem zeichnen
 function drawPoints() {
@@ -106,12 +107,14 @@ function startGame() {
   car.x = track.x + track.width / 2 - 25;
   car.y = canvas.height - 120;
   gameRunning = true;
+  obstacleSpawner = setInterval(spawnObstacle, obstacleSpawnInterval);
   gameLoop();
 }
 
 // Spiel beenden
 function endGame() {
   gameRunning = false;
+  clearInterval(obstacleSpawner); // Hindernis-Interval stoppen
   alert(`Game Over! You scored ${points} points.`);
   showStartScreen(); // Zurück zur Startseite
 }
@@ -137,14 +140,9 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// Hindernisse alle 2 Sekunden hinzufügen
-setInterval(spawnObstacle, obstacleSpawnInterval);
-
-// Event Listener für Bewegung und Spielstart
-window.addEventListener("keydown", moveCar);
-
 // Startseite anzeigen
 function showStartScreen() {
+  gameRunning = false;
   ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvas leeren
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -154,7 +152,12 @@ function showStartScreen() {
   ctx.textAlign = "center";
   ctx.fillText("Press 'Start Race' to Begin!", canvas.width / 2, canvas.height / 2);
 
+  // Vorherige Buttons entfernen
+  const existingButton = document.getElementById("startButton");
+  if (existingButton) existingButton.remove();
+
   const startButton = document.createElement("button");
+  startButton.id = "startButton";
   startButton.innerText = "Start Race";
   startButton.style.position = "absolute";
   startButton.style.top = `${canvas.height / 2 + 40}px`;
