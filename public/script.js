@@ -26,14 +26,15 @@ function createTrackSegment(length, curveAngle = 0) {
   segment.rotation.x = -Math.PI / 2; // Flach legen
   segment.rotation.y = currentRotation; // Orientierung anpassen
 
-  // Position basierend auf der vorherigen Position und Rotation berechnen
+  // Position basierend auf der aktuellen Rotation und Länge berechnen
   const dx = Math.sin(currentRotation) * length;
   const dz = Math.cos(currentRotation) * length;
 
-  currentPosition.x += dx;
-  currentPosition.z -= dz;
-
-  segment.position.set(currentPosition.x - dx / 2, 0, currentPosition.z + dz / 2);
+  segment.position.set(
+    currentPosition.x + dx / 2,
+    0,
+    currentPosition.z - dz / 2
+  );
 
   scene.add(segment);
 
@@ -41,10 +42,12 @@ function createTrackSegment(length, curveAngle = 0) {
   createWall(segmentWidth, length, segment, 5); // Rechte Wand
   createWall(segmentWidth, length, segment, -5); // Linke Wand
 
-  // Debug-Markierungen (optional)
-  createDebugMarker(currentPosition.x, currentPosition.z, "red");
+  // Debug-Markierungen (zum Testen)
+  createDebugMarker(segment.position.x, segment.position.z, "red");
 
-  // Rotation für das nächste Segment aktualisieren
+  // Position und Rotation für das nächste Segment aktualisieren
+  currentPosition.x += dx;
+  currentPosition.z -= dz;
   currentRotation += curveAngle;
 }
 
