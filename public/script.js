@@ -6,8 +6,11 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // Beleuchtung hinzufügen
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Umgebungslicht
 scene.add(ambientLight);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); // Direktionales Licht
+directionalLight.position.set(10, 20, 10);
+scene.add(directionalLight);
 
 // Materialien
 const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
@@ -19,7 +22,7 @@ let currentRotation = 0; // Startrotation
 
 // Funktion zum Hinzufügen eines Streckensegments
 function createTrackSegment(length, curveAngle = 0) {
-  const trackWidth = 10; // Breite der Strecke
+  const trackWidth = 20; // Breite der Strecke
   const segmentGeometry = new THREE.PlaneGeometry(trackWidth, length);
   const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
   segment.rotation.x = -Math.PI / 2; // Strecke flach legen
@@ -74,6 +77,10 @@ createDebugMarker(0, 0, "red"); // Position des Autos
 let keys = {};
 window.addEventListener("keydown", (event) => (keys[event.key] = true));
 window.addEventListener("keyup", (event) => (keys[event.key] = false));
+
+// Kamera positionieren
+camera.position.set(0, 50, 100); // Schräg über der Szene
+camera.lookAt(0, 0, -50); // Auf die Strecke schauen
 
 // Animationsschleife
 function animate() {
