@@ -62,7 +62,7 @@ function updateObstacles() {
   obstacles.forEach((obstacle) => {
     obstacle.y += obstacleSpeed;
 
-    // Horizontale Bewegung (optional für bewegliche Hindernisse)
+    // Horizontale Bewegung (nur für bewegliche Hindernisse)
     if (obstacle.moving) {
       obstacle.x += obstacle.direction;
       // Begrenzung der Bewegung
@@ -94,23 +94,30 @@ function updateObstacles() {
 // Hindernisse zufällig erstellen
 function spawnObstacle() {
   if (!gameRunning) return;
+
   const obstacleWidth = Math.random() * 50 + 30; // Breite: 30-80
   const obstacleHeight = Math.random() * 30 + 20; // Höhe: 20-50
   const obstacleX = track.x + Math.random() * (track.width - obstacleWidth);
-  const obstacleColor = ["blue", "green", "yellow", "purple"][
-    Math.floor(Math.random() * 4)
-  ]; // Zufällige Farbe
 
-  const moving = Math.random() < 0.3; // 30% Wahrscheinlichkeit für Bewegung
-  const direction = Math.random() < 0.5 ? -2 : 2; // Bewegungsrichtung (links oder rechts)
+  // Farben und Beweglichkeit definieren
+  const colors = [
+    { color: "blue", moving: false }, // Feste Hindernisse
+    { color: "green", moving: false }, // Feste Hindernisse
+    { color: "purple", moving: true }, // Bewegliche Hindernisse
+    { color: "red", moving: true }, // Bewegliche Hindernisse
+  ];
+  const chosen = colors[Math.floor(Math.random() * colors.length)];
+
+  // Bewegungsrichtung (nur für bewegliche Hindernisse)
+  const direction = chosen.moving ? (Math.random() < 0.5 ? -2 : 2) : 0;
 
   obstacles.push({
     x: obstacleX,
     y: -50,
     width: obstacleWidth,
     height: obstacleHeight,
-    color: obstacleColor,
-    moving: moving,
+    color: chosen.color,
+    moving: chosen.moving,
     direction: direction,
   });
 }
