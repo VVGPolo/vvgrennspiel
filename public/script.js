@@ -15,38 +15,57 @@ const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
 const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
 
 // Strecke bauen
-function createTrackSegment(width, length, x, z, rotation = 0) {
-  const segmentGeometry = new THREE.PlaneGeometry(width, length);
+let lastPosition = { x: 0, z: 0 };
+let lastRotation = 0;
+
+// Funktion zum Hinzufügen von Segmenten
+function createTrackSegment(length, curveAngle = 0) {
+  const segmentWidth = 10; // Breite der Strecke
+  const segmentGeometry = new THREE.PlaneGeometry(segmentWidth, length);
   const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
   segment.rotation.x = -Math.PI / 2; // Flach legen
-  segment.rotation.z = rotation; // Rotation hinzufügen
-  segment.position.set(x, 0, z);
+  segment.rotation.y = lastRotation; // Orientierung anpassen
+
+  // Position basierend auf der vorherigen
+  const dx = Math.sin(lastRotation) * length;
+  const dz = Math.cos(lastRotation) * length;
+  lastPosition.x += dx;
+  lastPosition.z -= dz;
+  segment.position.set(lastPosition.x, 0, lastPosition.z);
+
   scene.add(segment);
+
+  // Begrenzungswände hinzufügen
+  createWall(segmentWidth, length, 5, segment);
+  createWall(segmentWidth, length, -5, segment);
+
+  // Rotation aktualisieren (falls Kurve)
+  lastRotation += curveAngle;
+
   return segment;
 }
 
-// Begrenzungswände
-function createWall(width, height, depth, x, z) {
-  const wallGeometry = new THREE.BoxGeometry(width, height, depth);
+// Begrenzungswände entlang der Strecke
+function createWall(width, length, offsetX, segment) {
+  const wallGeometry = new THREE.BoxGeometry(1, 2, length);
   const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-  wall.position.set(x, height / 2, z); // Position anpassen
+
+  const dx = Math.sin(segment.rotation.y) * offsetX;
+  const dz = Math.cos(segment.rotation.y) * offsetX;
+  wall.position.set(segment.position.x + dx, 1, segment.position.z - dz);
+
+  wall.rotation.y = segment.rotation.y;
   scene.add(wall);
-  return wall;
 }
 
 // Strecke erstellen
-createTrackSegment(10, 50, 0, 0); // Startgerade
-createTrackSegment(10, 20, 5, -30, Math.PI / 8); // Rechtskurve
-createTrackSegment(10, 30, 10, -60); // Gerade
-createTrackSegment(10, 20, 0, -80, -Math.PI / 8); // Linkskurve
-createTrackSegment(10, 40, -10, -120); // Gerade
-createTrackSegment(10, 30, -20, -150, Math.PI / 8); // Rechtskurve
-
-// Begrenzungswände entlang der Strecke
-createWall(1, 1, 50, 5.5, 0); // Rechte Wand der Startgeraden
-createWall(1, 1, 50, -5.5, 0); // Linke Wand der Startgeraden
-createWall(1, 1, 20, 10.5, -30); // Rechte Wand der Kurve
-createWall(1, 1, 20, -0.5, -30); // Linke Wand der Kurve
+createTrackSegment(50); // Gerade
+createTrackSegment(20, Math.PI / 8); // Rechtskurve
+createTrackSegment(30); // Gerade
+createTrackSegment(20, -Math.PI / 8); // Linkskurve
+createTrackSegment(40); // Gerade
+createTrackSegment(30, Math.PI / 8); // Rechtskurve
+createTrackSegment(50); // Gerade
 
 // Auto
 const carGeometry = new THREE.BoxGeometry(0.5, 0.5, 1);
@@ -71,11 +90,18 @@ function animate() {
   // Bewegung des Autos
   if (keys["ArrowLeft"]) car.position.x -= 0.1;
   if (keys["ArrowRight"]) car.position.x += 0.1;
-  if (keys["ArrowUp"]) car.position.z -= 0.1;
-  if (keys["ArrowDown"]) car.position.z += 0.1;
+  if (keys["ArrowUp"]) {
+    car.position.z -= 0.1 * Math.cos(lastRotation);
+    car.position.x -= 0.1 * Math.sin(lastRotation);
+  }
+  if (keys["ArrowDown"]) {
+    car.position.z += 0.1 * Math.cos(lastRotation);
+    car.position.x += 0.1 * Math.sin(lastRotation);
+  }
 
   // Kamera folgt dem Auto
   camera.position.z = car.position.z + 5;
+  camera.position.x = car.position.x;
   camera.lookAt(car.position);
 
   renderer.render(scene, camera);
