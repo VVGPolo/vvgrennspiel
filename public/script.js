@@ -16,8 +16,8 @@ scene.add(directionalLight);
 const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
 const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 
-// Globale Variable für die Strecke
-let lastSegment = null;
+// Globale Variablen für die Strecke
+let currentPosition = { x: 0, z: 0 }; // Startposition
 let currentRotation = 0; // Startrotation
 
 // Funktion zum Hinzufügen eines Streckensegments
@@ -26,21 +26,26 @@ function createTrackSegment(length, curveAngle = 0) {
   const segmentGeometry = new THREE.PlaneGeometry(trackWidth, length);
   const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
   segment.rotation.x = -Math.PI / 2; // Strecke flach legen
+  segment.rotation.y = currentRotation; // Orientierung setzen
 
-  // Falls es kein vorheriges Segment gibt, das erste Segment erstellen
-  if (lastSegment === null) {
-    segment.position.set(0, 0, -length / 2);
-  } else {
-    // Segment an das vorherige anhängen
-    segment.position.set(0, 0, -length);
-    segment.rotation.y = curveAngle;
+  // Position basierend auf der aktuellen Rotation und Länge berechnen
+  const dx = Math.sin(currentRotation) * length / 2;
+  const dz = Math.cos(currentRotation) * length / 2;
+  segment.position.set(
+    currentPosition.x + dx,
+    0,
+    currentPosition.z - dz
+  );
 
-    // Das aktuelle Segment relativ zum vorherigen verschieben
-    lastSegment.add(segment);
-  }
-
+  // Füge das Segment zur Szene hinzu
   scene.add(segment);
-  lastSegment = segment; // Aktuelles Segment wird zum letzten Segment
+
+  // Aktualisiere die aktuelle Position für das nächste Segment
+  currentPosition.x += Math.sin(currentRotation) * length;
+  currentPosition.z -= Math.cos(currentRotation) * length;
+
+  // Aktualisiere die aktuelle Rotation für die nächste Kurve
+  currentRotation += curveAngle;
 
   // Debug-Markierung hinzufügen
   createDebugMarker(segment.position.x, segment.position.z, "yellow");
