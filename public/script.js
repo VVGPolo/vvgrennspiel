@@ -26,6 +26,7 @@ let points = 0;
 let level = 1;
 let gameRunning = false; // Startet nur nach Klick auf "Start Race"
 let obstacleSpawner; // Referenz für das Hindernis-Interval
+let keys = {}; // Aktive Tasten speichern
 
 // Punktesystem zeichnen
 function drawPoints() {
@@ -114,18 +115,28 @@ function spawnObstacle() {
   });
 }
 
-// Auto bewegen
-function moveCar(event) {
+// Bewegung basierend auf aktiven Tasten
+function moveCar() {
   if (!gameRunning) return;
-  if (event.key === "ArrowLeft") car.x -= car.speed;
-  if (event.key === "ArrowRight") car.x += car.speed;
-  if (event.key === "ArrowUp") car.y -= car.speed;
-  if (event.key === "ArrowDown") car.y += car.speed;
+
+  if (keys["ArrowLeft"]) car.x -= car.speed;
+  if (keys["ArrowRight"]) car.x += car.speed;
+  if (keys["ArrowUp"]) car.y -= car.speed;
+  if (keys["ArrowDown"]) car.y += car.speed;
 
   // Begrenzung des Autos innerhalb der Rennstrecke
   car.x = Math.max(track.x, Math.min(track.x + track.width - car.width, car.x));
   car.y = Math.max(0, Math.min(canvas.height - car.height, car.y));
 }
+
+// Event Listener für Tasteneingaben
+window.addEventListener("keydown", (event) => {
+  keys[event.key] = true; // Taste gedrückt
+});
+
+window.addEventListener("keyup", (event) => {
+  keys[event.key] = false; // Taste losgelassen
+});
 
 // Spiel starten
 function startGame() {
@@ -159,6 +170,7 @@ function gameLoop() {
   drawObstacles();
   drawPoints();
   updateObstacles();
+  moveCar(); // Auto bewegen
 
   points++;
   if (points % 500 === 0) {
