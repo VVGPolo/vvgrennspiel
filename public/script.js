@@ -49,21 +49,16 @@ function createTrackSegment(length, curveAngle = 0) {
   createWall(segmentWidth, length, segment, 5); // Rechte Wand
   createWall(segmentWidth, length, segment, -5); // Linke Wand
 
-  // Debug-Markierungen (optional)
-  createDebugMarker(segment.position.x, segment.position.z, "red");
+  // Segment zur Minimap hinzufügen
+  trackSegments.push({
+    x: currentPosition.x,
+    z: currentPosition.z,
+  });
 
   // Position und Rotation für das nächste Segment aktualisieren
   currentPosition.x += dx;
   currentPosition.z -= dz;
   currentRotation += curveAngle;
-
-  // Segment zur Minimap hinzufügen
-  trackSegments.push({
-    x: currentPosition.x,
-    z: currentPosition.z,
-    length: length,
-    curveAngle: curveAngle,
-  });
 }
 
 // Begrenzungswände entlang der Strecke
@@ -80,15 +75,6 @@ function createWall(segmentWidth, segmentLength, segment, offsetX) {
   scene.add(wall);
 }
 
-// Debug-Markierungen hinzufügen (zum Testen der Positionierung)
-function createDebugMarker(x, z, color) {
-  const markerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
-  const markerMaterial = new THREE.MeshBasicMaterial({ color });
-  const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-  marker.position.set(x, 0.5, z);
-  scene.add(marker);
-}
-
 // Minimap aktualisieren
 function updateMinimap() {
   minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
@@ -102,9 +88,9 @@ function updateMinimap() {
   minimapCtx.moveTo(startX, startZ);
 
   for (const segment of trackSegments) {
-    startX += segment.x * 0.1; // Skalierung
-    startZ += segment.z * 0.1; // Skalierung
-    minimapCtx.lineTo(startX, startZ);
+    const x = segment.x * 0.1; // Skalierung für die Minimap
+    const z = segment.z * 0.1; // Skalierung für die Minimap
+    minimapCtx.lineTo(startX + x, startZ - z);
   }
   minimapCtx.stroke();
 
