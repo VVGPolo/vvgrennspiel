@@ -113,6 +113,7 @@ function startGame() {
 function endGame() {
   gameRunning = false;
   alert(`Game Over! You scored ${points} points.`);
+  showStartScreen(); // Zurück zur Startseite
 }
 
 // Spielschleife
@@ -144,6 +145,7 @@ window.addEventListener("keydown", moveCar);
 
 // Startseite anzeigen
 function showStartScreen() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvas leeren
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -165,4 +167,5 @@ function showStartScreen() {
   });
 }
 
+// Beim Laden der Seite die Startseite anzeigen
 showStartScreen();
