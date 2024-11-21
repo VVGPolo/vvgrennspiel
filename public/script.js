@@ -22,7 +22,17 @@ let car = {
 let obstacles = [];
 let obstacleSpeed = 4;
 let obstacleSpawnInterval = 2000;
-let gameRunning = true; // Spielzustand
+let points = 0;
+let level = 1;
+let gameRunning = false; // Startet nur nach Klick auf "Start Race"
+
+// Punktesystem zeichnen
+function drawPoints() {
+  ctx.fillStyle = "white";
+  ctx.font = "20px Arial";
+  ctx.fillText(`Points: ${points}`, 10, 30);
+  ctx.fillText(`Level: ${level}`, 10, 60);
+}
 
 // Auto zeichnen
 function drawCar() {
@@ -68,7 +78,7 @@ function updateObstacles() {
 
 // Hindernisse zufällig erstellen
 function spawnObstacle() {
-  if (!gameRunning) return; // Keine neuen Hindernisse bei "Game Over"
+  if (!gameRunning) return;
   const obstacleWidth = Math.random() * 40 + 30;
   const obstacleX = track.x + Math.random() * (track.width - obstacleWidth);
   obstacles.push({ x: obstacleX, y: -50, width: obstacleWidth, height: 20 });
@@ -76,7 +86,7 @@ function spawnObstacle() {
 
 // Auto bewegen
 function moveCar(event) {
-  if (!gameRunning) return; // Keine Bewegung bei "Game Over"
+  if (!gameRunning) return;
   if (event.key === "ArrowLeft") car.x -= car.speed;
   if (event.key === "ArrowRight") car.x += car.speed;
   if (event.key === "ArrowUp") car.y -= car.speed;
@@ -87,31 +97,41 @@ function moveCar(event) {
   car.y = Math.max(0, Math.min(canvas.height - car.height, car.y));
 }
 
-// Spiel beenden
-function endGame() {
-  gameRunning = false;
-  alert("Game Over!");
-  resetGame();
-}
-
-// Spiel zurücksetzen
-function resetGame() {
+// Spiel starten
+function startGame() {
+  points = 0;
+  level = 1;
+  obstacleSpeed = 4;
   obstacles = [];
   car.x = track.x + track.width / 2 - 25;
   car.y = canvas.height - 120;
   gameRunning = true;
+  gameLoop();
+}
+
+// Spiel beenden
+function endGame() {
+  gameRunning = false;
+  alert(`Game Over! You scored ${points} points.`);
 }
 
 // Spielschleife
 function gameLoop() {
-  if (!gameRunning) return; // Spiel pausieren, wenn es nicht läuft
+  if (!gameRunning) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   drawTrack();
   drawCar();
   drawObstacles();
+  drawPoints();
   updateObstacles();
+
+  points++;
+  if (points % 500 === 0) {
+    level++;
+    obstacleSpeed += 1;
+  }
 
   requestAnimationFrame(gameLoop);
 }
@@ -119,6 +139,30 @@ function gameLoop() {
 // Hindernisse alle 2 Sekunden hinzufügen
 setInterval(spawnObstacle, obstacleSpawnInterval);
 
-// Event Listener und Start der Spielschleife
+// Event Listener für Bewegung und Spielstart
 window.addEventListener("keydown", moveCar);
-gameLoop();
+
+// Startseite anzeigen
+function showStartScreen() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "white";
+  ctx.font = "30px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Press 'Start Race' to Begin!", canvas.width / 2, canvas.height / 2);
+
+  const startButton = document.createElement("button");
+  startButton.innerText = "Start Race";
+  startButton.style.position = "absolute";
+  startButton.style.top = `${canvas.height / 2 + 40}px`;
+  startButton.style.left = `${canvas.width / 2 - 50}px`;
+  document.body.appendChild(startButton);
+
+  startButton.addEventListener("click", () => {
+    startButton.remove();
+    startGame();
+  });
+}
+
+showStartScreen();
