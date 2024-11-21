@@ -17,8 +17,7 @@ const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
 const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 
 // Globale Variablen für die Strecke
-let currentPosition = { x: 0, z: 0 }; // Startposition
-let currentRotation = 0; // Startrotation
+let lastSegment = null; // Das zuletzt hinzugefügte Segment
 
 // Funktion zum Hinzufügen eines Streckensegments
 function createTrackSegment(length, curveAngle = 0) {
@@ -26,26 +25,23 @@ function createTrackSegment(length, curveAngle = 0) {
   const segmentGeometry = new THREE.PlaneGeometry(trackWidth, length);
   const segment = new THREE.Mesh(segmentGeometry, trackMaterial);
   segment.rotation.x = -Math.PI / 2; // Strecke flach legen
-  segment.rotation.y = currentRotation; // Orientierung setzen
 
-  // Position basierend auf der aktuellen Rotation und Länge berechnen
-  const dx = Math.sin(currentRotation) * length / 2;
-  const dz = Math.cos(currentRotation) * length / 2;
-  segment.position.set(
-    currentPosition.x + dx,
-    0,
-    currentPosition.z - dz
-  );
+  if (lastSegment === null) {
+    // Erstes Segment (Startsegment)
+    segment.position.set(0, 0, -length / 2);
+  } else {
+    // Die Transformation des letzten Segments anwenden, um die Position des neuen Segments festzulegen
+    segment.position.set(0, 0, -length / 2);
+    segment.updateMatrix(); // Die Matrix des neuen Segments aktualisieren
 
-  // Füge das Segment zur Szene hinzu
+    // Die Transformationen des letzten Segments anwenden
+    segment.applyMatrix4(lastSegment.matrix);
+    segment.rotation.y += curveAngle; // Die Kurve hinzufügen
+  }
+
+  // Füge das Segment zur Szene hinzu und aktualisiere das letzte Segment
   scene.add(segment);
-
-  // Aktualisiere die aktuelle Position für das nächste Segment
-  currentPosition.x += Math.sin(currentRotation) * length;
-  currentPosition.z -= Math.cos(currentRotation) * length;
-
-  // Aktualisiere die aktuelle Rotation für die nächste Kurve
-  currentRotation += curveAngle;
+  lastSegment = segment;
 
   // Debug-Markierung hinzufügen
   createDebugMarker(segment.position.x, segment.position.z, "yellow");
