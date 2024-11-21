@@ -16,6 +16,10 @@ scene.add(directionalLight);
 const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
 const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 
+// Startposition für Strecke und Rotation
+let currentRotation = 0;
+let lastSegment = null;
+
 // Funktion zum Hinzufügen eines Streckensegments
 function createTrackSegment(length, curveAngle = 0) {
   const trackWidth = 20; // Breite der Strecke
@@ -54,12 +58,15 @@ function createDebugMarker(x, z, color) {
 // Startposition für die Strecke
 let lastSegment = null;
 
-// Strecke aufbauen
+// Strecke aufbauen (Rundkurs)
 createTrackSegment(50); // Gerade
 createTrackSegment(30, Math.PI / 8); // Rechtskurve
 createTrackSegment(50); // Gerade
-createTrackSegment(30, -Math.PI / 8); // Linkskurve
+createTrackSegment(30, Math.PI / 8); // Rechtskurve
 createTrackSegment(50); // Gerade
+createTrackSegment(30, Math.PI / 8); // Rechtskurve
+createTrackSegment(50); // Gerade
+createTrackSegment(30, Math.PI / 8); // Rechtskurve
 
 // Auto erstellen
 const carGeometry = new THREE.BoxGeometry(5, 2, 10); // Breite x Höhe x Länge
