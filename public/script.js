@@ -75,6 +75,15 @@ function createWall(segmentWidth, segmentLength, segment, offsetX) {
   scene.add(wall);
 }
 
+// Debug-Markierungen hinzufügen (zum Testen der Positionierung)
+function createDebugMarker(x, z, color) {
+  const markerGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+  const markerMaterial = new THREE.MeshBasicMaterial({ color });
+  const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+  marker.position.set(x, 0.5, z);
+  scene.add(marker);
+}
+
 // Minimap aktualisieren
 function updateMinimap() {
   minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
@@ -116,11 +125,11 @@ createTrackSegment(50); // Gerade
 const carGeometry = new THREE.BoxGeometry(0.5, 0.5, 1);
 const carMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 const car = new THREE.Mesh(carGeometry, carMaterial);
-car.position.y = 0.25; // Etwas über dem Boden
+car.position.set(0, 0.25, 0); // Auto auf Startposition setzen
 scene.add(car);
 
 // Kamera-Position
-camera.position.set(0, 5, 5);
+camera.position.set(0, 10, 10);
 camera.lookAt(car.position);
 
 // Steuerung
