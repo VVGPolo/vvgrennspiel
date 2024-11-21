@@ -29,10 +29,7 @@ function createTrackSegment(length, curveAngle = 0) {
   // Position basierend auf der vorherigen Position und Rotation berechnen
   const dx = Math.sin(lastRotation) * length / 2;
   const dz = Math.cos(lastRotation) * length / 2;
-  lastPosition.x += dx;
-  lastPosition.z -= dz;
-
-  segment.position.set(lastPosition.x, 0, lastPosition.z);
+  segment.position.set(lastPosition.x + dx, 0, lastPosition.z - dz);
 
   // Begrenzungswände hinzufügen
   createWall(segmentWidth, length, segment, 5); // Rechte Wand
@@ -91,20 +88,22 @@ function animate() {
   requestAnimationFrame(animate);
 
   // Bewegung des Autos
-  if (keys["ArrowLeft"]) car.position.x -= 0.1;
-  if (keys["ArrowRight"]) car.position.x += 0.1;
+  const speed = 0.2;
+  const turnSpeed = 0.05;
+  if (keys["ArrowLeft"]) car.rotation.y += turnSpeed;
+  if (keys["ArrowRight"]) car.rotation.y -= turnSpeed;
+
   if (keys["ArrowUp"]) {
-    car.position.z -= 0.1 * Math.cos(lastRotation);
-    car.position.x -= 0.1 * Math.sin(lastRotation);
+    car.position.x -= Math.sin(car.rotation.y) * speed;
+    car.position.z -= Math.cos(car.rotation.y) * speed;
   }
   if (keys["ArrowDown"]) {
-    car.position.z += 0.1 * Math.cos(lastRotation);
-    car.position.x += 0.1 * Math.sin(lastRotation);
+    car.position.x += Math.sin(car.rotation.y) * speed;
+    car.position.z += Math.cos(car.rotation.y) * speed;
   }
 
   // Kamera folgt dem Auto
-  camera.position.z = car.position.z + 5;
-  camera.position.x = car.position.x;
+  camera.position.set(car.position.x, car.position.y + 5, car.position.z + 10);
   camera.lookAt(car.position);
 
   renderer.render(scene, camera);
