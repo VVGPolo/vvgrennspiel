@@ -5,10 +5,16 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Beleuchtung hinzufügen
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(10, 10, 10);
-scene.add(light);
+// Minimap-Canvas erstellen
+const minimapCanvas = document.createElement("canvas");
+minimapCanvas.width = 200;
+minimapCanvas.height = 200;
+minimapCanvas.style.position = "absolute";
+minimapCanvas.style.top = "10px";
+minimapCanvas.style.left = "10px";
+minimapCanvas.style.border = "2px solid white";
+document.body.appendChild(minimapCanvas);
+const minimapCtx = minimapCanvas.getContext("2d");
 
 // Materialien
 const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
@@ -17,6 +23,7 @@ const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
 // Strecke bauen
 let currentPosition = { x: 0, z: 0 }; // Startposition
 let currentRotation = 0; // Startrotation
+const trackSegments = []; // Speichert alle Segmente für die Minimap
 
 // Funktion zum Hinzufügen von Segmenten
 function createTrackSegment(length, curveAngle = 0) {
@@ -42,13 +49,21 @@ function createTrackSegment(length, curveAngle = 0) {
   createWall(segmentWidth, length, segment, 5); // Rechte Wand
   createWall(segmentWidth, length, segment, -5); // Linke Wand
 
-  // Debug-Markierungen (zum Testen)
+  // Debug-Markierungen (optional)
   createDebugMarker(segment.position.x, segment.position.z, "red");
 
   // Position und Rotation für das nächste Segment aktualisieren
   currentPosition.x += dx;
   currentPosition.z -= dz;
   currentRotation += curveAngle;
+
+  // Segment zur Minimap hinzufügen
+  trackSegments.push({
+    x: currentPosition.x,
+    z: currentPosition.z,
+    length: length,
+    curveAngle: curveAngle,
+  });
 }
 
 // Begrenzungswände entlang der Strecke
@@ -72,6 +87,34 @@ function createDebugMarker(x, z, color) {
   const marker = new THREE.Mesh(markerGeometry, markerMaterial);
   marker.position.set(x, 0.5, z);
   scene.add(marker);
+}
+
+// Minimap aktualisieren
+function updateMinimap() {
+  minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+
+  // Strecke zeichnen
+  minimapCtx.strokeStyle = "white";
+  minimapCtx.lineWidth = 2;
+  minimapCtx.beginPath();
+  let startX = minimapCanvas.width / 2;
+  let startZ = minimapCanvas.height / 2;
+  minimapCtx.moveTo(startX, startZ);
+
+  for (const segment of trackSegments) {
+    startX += segment.x * 0.1; // Skalierung
+    startZ += segment.z * 0.1; // Skalierung
+    minimapCtx.lineTo(startX, startZ);
+  }
+  minimapCtx.stroke();
+
+  // Auto positionieren
+  const carX = minimapCanvas.width / 2 + car.position.x * 0.1;
+  const carZ = minimapCanvas.height / 2 - car.position.z * 0.1;
+  minimapCtx.fillStyle = "red";
+  minimapCtx.beginPath();
+  minimapCtx.arc(carX, carZ, 5, 0, 2 * Math.PI);
+  minimapCtx.fill();
 }
 
 // Strecke erstellen
@@ -121,6 +164,9 @@ function animate() {
   // Kamera folgt dem Auto
   camera.position.set(car.position.x, car.position.y + 5, car.position.z + 10);
   camera.lookAt(car.position);
+
+  // Minimap aktualisieren
+  updateMinimap();
 
   renderer.render(scene, camera);
 }
