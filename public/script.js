@@ -31,8 +31,9 @@ let obstacleSpawner; // Referenz für das Hindernis-Interval
 function drawPoints() {
   ctx.fillStyle = "white";
   ctx.font = "20px Arial";
-  ctx.fillText(`Points: ${points}`, 10, 30);
-  ctx.fillText(`Level: ${level}`, 10, 60);
+  ctx.textAlign = "left"; // Text links ausrichten
+  ctx.fillText(`Points: ${points}`, 20, 30); // Abstand zur linken Seite korrigiert
+  ctx.fillText(`Level: ${level}`, 20, 60); // Abstand zur linken Seite korrigiert
 }
 
 // Auto zeichnen
@@ -49,8 +50,8 @@ function drawTrack() {
 
 // Hindernisse zeichnen
 function drawObstacles() {
-  ctx.fillStyle = "blue";
   obstacles.forEach((obstacle) => {
+    ctx.fillStyle = obstacle.color;
     ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
   });
 }
@@ -59,6 +60,18 @@ function drawObstacles() {
 function updateObstacles() {
   obstacles.forEach((obstacle) => {
     obstacle.y += obstacleSpeed;
+
+    // Horizontale Bewegung (optional für bewegliche Hindernisse)
+    if (obstacle.moving) {
+      obstacle.x += obstacle.direction;
+      // Begrenzung der Bewegung
+      if (
+        obstacle.x < track.x ||
+        obstacle.x + obstacle.width > track.x + track.width
+      ) {
+        obstacle.direction *= -1; // Richtung ändern
+      }
+    }
   });
 
   // Entferne Hindernisse, die aus dem Bildschirm sind
@@ -80,9 +93,25 @@ function updateObstacles() {
 // Hindernisse zufällig erstellen
 function spawnObstacle() {
   if (!gameRunning) return;
-  const obstacleWidth = Math.random() * 40 + 30;
+  const obstacleWidth = Math.random() * 50 + 30; // Breite: 30-80
+  const obstacleHeight = Math.random() * 30 + 20; // Höhe: 20-50
   const obstacleX = track.x + Math.random() * (track.width - obstacleWidth);
-  obstacles.push({ x: obstacleX, y: -50, width: obstacleWidth, height: 20 });
+  const obstacleColor = ["blue", "green", "yellow", "purple"][
+    Math.floor(Math.random() * 4)
+  ]; // Zufällige Farbe
+
+  const moving = Math.random() < 0.3; // 30% Wahrscheinlichkeit für Bewegung
+  const direction = Math.random() < 0.5 ? -2 : 2; // Bewegungsrichtung (links oder rechts)
+
+  obstacles.push({
+    x: obstacleX,
+    y: -50,
+    width: obstacleWidth,
+    height: obstacleHeight,
+    color: obstacleColor,
+    moving: moving,
+    direction: direction,
+  });
 }
 
 // Auto bewegen
