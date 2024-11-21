@@ -28,7 +28,11 @@ function createTrackSegment(length, curveAngle = 0) {
   // Position basierend auf aktueller Rotation und Länge berechnen
   const dx = Math.sin(currentRotation) * length / 2;
   const dz = Math.cos(currentRotation) * length / 2;
-  segment.position.set(currentPosition.x + dx, 0, currentPosition.z - dz);
+  segment.position.set(
+    currentPosition.x + dx,
+    0,
+    currentPosition.z - dz
+  );
 
   scene.add(segment);
 
@@ -58,33 +62,38 @@ createTrackSegment(30, -Math.PI / 8); // Linkskurve
 createTrackSegment(50); // Gerade
 
 // Auto erstellen
-function createCar() {
-  const carGeometry = new THREE.BoxGeometry(5, 2, 10); // Breite x Höhe x Länge
-  const car = new THREE.Mesh(carGeometry, carMaterial);
-  car.position.set(0, 1, 0); // Auto leicht über der Strecke platzieren
-  scene.add(car);
+const carGeometry = new THREE.BoxGeometry(5, 2, 10); // Breite x Höhe x Länge
+const car = new THREE.Mesh(carGeometry, carMaterial);
+car.position.set(0, 1, 0); // Auto leicht über der Strecke platzieren
+scene.add(car);
 
-  // Debug-Markierung für das Auto
-  createDebugMarker(0, 0, "red"); // Position des Autos
-}
-createCar();
+// Debug-Markierung für das Auto
+createDebugMarker(0, 0, "red"); // Position des Autos
 
-// Test-Würfel (bleibt zur Orientierung)
-const testCubeGeometry = new THREE.BoxGeometry(5, 5, 5);
-const testCubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const testCube = new THREE.Mesh(testCubeGeometry, testCubeMaterial);
-testCube.position.set(20, 2.5, -50); // Außerhalb der Strecke platzieren
-scene.add(testCube);
-
-// Kamera positionieren
-camera.position.set(0, 50, 100); // Schräg über der Szene
-camera.lookAt(0, 0, -100); // Auf die Strecke schauen
+// Steuerung
+let keys = {};
+window.addEventListener("keydown", (event) => (keys[event.key] = true));
+window.addEventListener("keyup", (event) => (keys[event.key] = false));
 
 // Animationsschleife
 function animate() {
   requestAnimationFrame(animate);
-  testCube.rotation.x += 0.01; // Test: Würfel drehen
-  testCube.rotation.y += 0.01;
+
+  // Bewegung des Autos
+  const speed = 0.5;
+  const turnSpeed = 0.03;
+  if (keys["ArrowLeft"]) car.rotation.y += turnSpeed;
+  if (keys["ArrowRight"]) car.rotation.y -= turnSpeed;
+
+  if (keys["ArrowUp"]) {
+    car.position.x -= Math.sin(car.rotation.y) * speed;
+    car.position.z -= Math.cos(car.rotation.y) * speed;
+  }
+  if (keys["ArrowDown"]) {
+    car.position.x += Math.sin(car.rotation.y) * speed;
+    car.position.z += Math.cos(car.rotation.y) * speed;
+  }
+
   renderer.render(scene, camera);
 }
 animate();
