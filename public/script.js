@@ -25,9 +25,11 @@ function createTrackSegment(length, curveAngle = 0) {
   segment.rotation.x = -Math.PI / 2; // Strecke flach legen
   segment.rotation.y = currentRotation; // Orientierung setzen
 
-  // Position basierend auf aktueller Rotation und Länge berechnen
+  // Berechnung der neuen Position
   const dx = Math.sin(currentRotation) * length;
   const dz = Math.cos(currentRotation) * length;
+
+  // Segment in der Szene platzieren
   segment.position.set(
     currentPosition.x + dx / 2,
     0,
@@ -39,7 +41,7 @@ function createTrackSegment(length, curveAngle = 0) {
   // Debug-Markierung
   createDebugMarker(segment.position.x, segment.position.z, "yellow");
 
-  // Aktualisiere die Position für das nächste Segment
+  // Position und Rotation für das nächste Segment aktualisieren
   currentPosition.x += dx;
   currentPosition.z -= dz;
   currentRotation += curveAngle;
